@@ -125,3 +125,36 @@ plot_hist(axs[0, 1], *results_meres[:4], nom="Mères")
 plot_henri(axs[1, 1], results_meres[4], nom="Mères")
 plt.tight_layout()
 plt.show()
+
+
+
+def intervalle_confiance_moyenne(data, alpha=0.05):
+    """Retourne la moyenne ± marge d'erreur (IC 1 - alpha)"""
+    n, mean = len(data), np.mean(data)
+    std = np.std(data, ddof=1)
+    t_val = t.ppf(1 - alpha / 2, df=n - 1)
+    marge = t_val * std / np.sqrt(n)
+    return mean, marge
+
+def tests_statistiques(peres, meres):
+    # Intervalles de confiance
+    ic_peres = intervalle_confiance_moyenne(peres)
+    ic_meres = intervalle_confiance_moyenne(meres)
+    print(f"\nIntervalle 95% moyenne pères : {ic_peres}")
+    print(f"Intervalle 95% moyenne mères : {ic_meres}")
+
+    # Test de Levene (égalité des variances)
+    stat_levene, p_levene = levene(peres, meres)
+    print(f"\nTest de Levene : stat = {stat_levene:.3f}, p = {p_levene:.4f}")
+    equal_var = p_levene >= 0.05
+    conclusion_levene = "→ Variances égales" if equal_var else "→ Variances différentes"
+    print(conclusion_levene)
+
+    # Test t pour l'égalité des moyennes
+    stat_t, p_t = ttest_ind(peres, meres, equal_var=equal_var)
+    print(f"\nTest t (moyennes) : stat = {stat_t:.3f}, p = {p_t:.4f}")
+    conclusion_t = "→ Moyennes différentes (rejette H0)" if p_t < 0.05 else "→ Moyennes égales (ne rejette pas H0)"
+    print(conclusion_t)
+
+# Exécution
+tests_statistiques(peres, meres)
